@@ -1,0 +1,9 @@
+[submodule "lib/ml-utils"]
+	path = lib/ml-utils
+	url = https://github.com/sinzlab/ml-utils
+[submodule "lib/nnfabrik"]
+	path = lib/nnfabrik
+	url = https://github.com/sinzlab/nnfabrik
+[submodule "lib/pytorch-sso"]
+	path = lib/pytorch-sso
+	url = https://github.com/cybertronai/pytorch-sso
