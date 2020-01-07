@@ -1,0 +1,75 @@
+version: "2.3"
+
+services:
+# local machine deployment for code development
+ develop_gpu:
+   build: .
+   volumes:
+   - /home/mdepoortere/mdep/BALR:/notebooks
+   ports:
+     - "11996:8888"
+   env_file: .env
+   runtime: nvidia
+
+ develop_russel:
+   build: .
+   volumes:
+   - /home/mdepoortere/BALR:/notebooks
+   ports:
+     - "11997:8888"
+   env_file: .env
+   runtime: nvidia
+ detached_prod_gpu_server:
+   build: .
+   volumes:
+     - /mnt/nvme/mdepoortere/data/:/notebooks/external_data/
+     - /home/mdepoortere/mdep/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: /bin/bash
+
+ detached_prod_banach_random:
+   build: .
+   volumes:
+     - /home/mdepoortere/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python random_subsets/random_subsets.py
+
+ detached_prod_russel_al:
+   build: .
+   volumes:
+     - /home/mdepoortere/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python al_learning_loop.py
+
+ detached_prod_gpu_al:
+   build: .
+   volumes:
+     - /home/mdepoortere/mdep/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python al_learning_loop.py
+ detached_prod_pyth_al:
+   build: .
+   volumes:
+     - /home/mdepoortere/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python al_learning_loop.py
+
+ test_torch_sso:
+   build: ./lib/pytorch-sso
+   volumes:
+     - /home/mdepoortere/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python /notebooks/lib/pytorch-sso/examples/classification/main.py --config /notebooks/lib/pytorch-sso/examples/classification/configs/cifar10/lenet_vogn.json --download
+ detached_prod_grow:
+   build: .
+   volumes:
+     - /home/mdepoortere/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python ./random_subsets/growing_random_subsets.py
