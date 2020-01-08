@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 from mlutils.measures import corr
 from scipy import stats
-from estimator import mc_estimate
+from estimator import mean_estimate
 
 
 @contextmanager
@@ -43,7 +43,7 @@ def compute_predictions_mc(loader, model):
     y, y_hat = [], []
     with eval_state_mc(model):
         for x_val, y_val in loader:
-            mean, _ = mc_estimate(model, x_val, 5)
+            mean = mean_estimate(model, x_val, 5)
             y_hat.append(mean.detach().cpu().numpy())
             y.append(y_val.detach().cpu().numpy())
     y, y_hat = map(np.vstack, (y, y_hat))

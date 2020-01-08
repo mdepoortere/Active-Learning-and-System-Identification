@@ -24,3 +24,12 @@ def mc_estimate(model, x, n_samples):
             sd = torch.mean(sd, dim=1)
 
     return mean, sd
+
+
+def mean_estimate(model, x, n_samples):
+    with torch.no_grad():
+        with eval_state_mc(model):
+            samples_batch = torch.stack([model(x) for _ in range(n_samples)], dim=0)
+            mean = torch.mean(samples_batch, dim=0).cpu()
+
+    return mean
