@@ -27,7 +27,7 @@ def run(model, criterion, optimizer, scheduler, stop_closure, train_loader,
     return model, epoch
 
 
-def run_ensemble(ensemble, model_id, gpu_id, criterion, optimizer, scheduler, stop_closure, train_loader,
+def run_ensemble(ensemble, criterion, optimizer, scheduler, stop_closure, train_loader,
         epoch, interval, patience, max_iter, maximize, tolerance,
         restore_best, tracker):
     for epoch, val_obj in early_stopping(ensemble, stop_closure,
@@ -38,8 +38,8 @@ def run_ensemble(ensemble, model_id, gpu_id, criterion, optimizer, scheduler, st
         scheduler.step(val_obj)
         for images, responses in train_loader:
             optimizer.zero_grad()
-            loss = full_objective(images.float().to(gpu_id),
-                                  responses[model_id, :, :].to(gpu_id), ensemble.models[model_id].to(gpu_id),
+            loss = full_objective(images.float(),
+                                  torch.stack([responses.to('cuda:0'), responses.to('cuda:1')]), ensemble,
                                   criterion)
             loss.backward()
             optimizer.step()
@@ -108,23 +108,22 @@ def train_ensemble(ensemble, seed, train, val, test, **config):
                                                            )
 
     stop_closure = lambda model: corr_stop_mc(model, val)
-    for i in range(ensemble.n_models):
-        ensemble, epoch = run_ensemble(ensemble=ensemble,
-                                       model_id=i,
-                                       gpu_id='cuda:0',
-                                       criterion=PoissonLoss(avg=False),
-                                       optimizer=optimizer,
-                                       scheduler=scheduler,
-                                       stop_closure=stop_closure,
-                                       train_loader=train,
-                                       epoch=0,
-                                       interval=1,
-                                       patience=10,
-                                       max_iter=config['max_iter'],
-                                       maximize=True,
-                                       tolerance=1e-5,
-                                       restore_best=True,
-                                       tracker=tracker,
-                                       )
+
+    ensemble, epoch = run_ensemble(ensemble=ensemble,
+                                   model_id=i,
+                                   criterion=PoissonLoss(avg=False),
+                                   optimizer=optimizer,
+                                   scheduler=scheduler,
+                                   stop_closure=stop_closure,
+                                   train_loader=train,
+                                   epoch=0,
+                                   interval=1,
+                                   patience=10,
+                                   max_iter=config['max_iter'],
+                                   maximize=True,
+                                   tolerance=1e-5,
+                                   restore_best=True,
+                                   tracker=tracker,
+                                   )
     tracker.finalize()
     return np.max(tracker.log['correlation']), tracker.log, ensemble.state_dict()

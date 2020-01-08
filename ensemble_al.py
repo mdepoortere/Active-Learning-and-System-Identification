@@ -42,13 +42,13 @@ all_idx = set(range(TOTAL_IM))
 
 for i in range(4):
     model_config = load_obj('best_model_config')
-    model_config['seeds'] =
+    model_config['seeds'] = [i, i+20]
     model_entry = dict(configurator="models.create_ensemble", config_object=model_config,
                    model_architect="Matthias Depoortere", model_comment="Ensemble of models")
-Model().add_entry(**model_entry)
+    Model().add_entry(**model_entry)
 
 trainer_config = load_obj('best_train_config')
-trainer_entry = dict(training_function="trainer.train", training_config=trainer_config,
+trainer_entry = dict(training_function="trainer.train_ensemble", training_config=trainer_config,
                      trainer_architect="Matthias Depoortere", trainer_comment="best trainer on full dataset")
 Trainer().add_entry(**trainer_entry)
 al_statistics = []

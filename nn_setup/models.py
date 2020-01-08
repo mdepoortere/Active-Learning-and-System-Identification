@@ -35,18 +35,14 @@ class Ensemble(nn.Module):
         super().__init__()
         self.seeds = config['seeds']
         del config['seeds']
-        self.models = nn.ModuleList()
         self.config = config
         self.train_loader = train_loader
 
-    def init_ensemble(self):
-        for rand_seed in len(self.seeds):
-            self.config['seed'] = rand_seed
-            self.models.append(create_model(self.train_loader,  **self.config))
-
+        self.model0 = create_model(self.train_loader, self.seeds[0],  **self.config).to('cuda:0')
+        self.model1 = create_model(self.train_loader, self.seeds[1], **self.config).to('cuda:1')
 
     def forward(self, x):
-        out = [model(x) for model in self.models]
+        out = [self.model0(x.to('cuda:0')), self.model1(x.to('cuda:1'))]
         return torch.cat(out)
 
     @staticmethod
