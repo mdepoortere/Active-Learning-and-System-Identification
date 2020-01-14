@@ -33,7 +33,7 @@ Seed().insert([{'seed': 13}], skip_duplicates=True)
 
 labeled_dat = LabeledImageSet('./data/static20892-3-14-preproc0.h5', 'images', 'responses')
 idx = (dat.neurons.area == 'V1') & (dat.neurons.layer == 'L2/3')
-labeled_dat.transforms = [Subsample(Subsample(np.where(idx)[0])), ToTensor(cuda=True),
+labeled_dat.transforms = [Subsample(np.where(idx)[0]), ToTensor(cuda=True),
                           Normalized(np.where(dat.tiers == 'train')[0], dat.responses, cuda=True)]
 
 TOTAL_IM = np.where(dat.tiers == 'train')[0].size

@@ -19,7 +19,7 @@ from nn_setup.stop_measures import eval_state_mc
 
 from nn_setup.stop_measures import full_objective
 from nn_setup.trainer import train_ensemble
-
+from nn_setup.datamaker import create_dataloaders
 import multiprocessing as mp
 
 from mlutils.training import early_stopping, MultipleObjectiveTracker
@@ -136,7 +136,7 @@ from torch.utils.data import DataLoader, Subset
 from torch.utils.data.sampler import SubsetRandomSampler
 
 
-def create_dataloaders(file, batch_size):
+"""def create_dataloaders(file, batch_size):
     dat = StaticImageSet(file, 'images', 'responses')
     idx = (dat.neurons.area == 'V1') & (dat.neurons.layer == 'L2/3')
     dat.transforms = [Subsample(np.where(idx)[0]), ToTensor(cuda=False)]
@@ -297,15 +297,15 @@ def train_ensemble(ensemble, seed, **config):
     for i in range(0, 10, 2):
         res = split_training(ensemble, i, seed, **config)
         all_results.append(res)
-    return all_results
+    return all_results"""
 
 
 if __name__ == '__main__':
     model_config = dict(dropout_p=0.5, gamma_hidden=100, gamma_input=1)
-    model_config['seeds'] = list(range(10))
-    model_config['n_models'] = 10
+    model_config['seeds'] = list(range(2))
+    model_config['n_models'] = 2
 
-    loaders = create_dataloaders('/notebooks/data/static20892-3-14-preproc0.h5', batch_size=64)
+    loaders = create_dataloaders('/notebooks/data/static20892-3-14-preproc0.h5', 5, batch_size=64)
 
     ens = create_ensemble(loaders['train'], **model_config)
     train_config = dict(lr=0.01, weight_decay=0.0000001, max_iter=200, n_gpu=2)

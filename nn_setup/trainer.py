@@ -9,15 +9,6 @@ from mlutils.training import early_stopping, MultipleObjectiveTracker
 from mlutils.measures import PoissonLoss
 
 
-def group_models(lijst, n_gpu):
-    max_size = n_gpu
-    len_list = len(lijst)
-    grouping = [list(lijst[i*max_size : (i+1)*max_size]) for i in range(len_list//max_size)]
-    if len_list % max_size !=0:
-        grouping.append(list(lijst[len(lijst)//max_size * max_size : ]))
-    return grouping
-
-
 def run(model, criterion, optimizer, scheduler, stop_closure, train_loader,
         epoch, interval, patience, max_iter, maximize, tolerance,
         restore_best, tracker):
@@ -52,7 +43,7 @@ def run_model_ens(model, gpu_id, criterion, optimizer, scheduler, stop_closure, 
             loss = full_objective(images.float().to('cuda:{}'.format(gpu_id)), responses.float().to('cuda:{}'.format(gpu_id)), model, criterion)
             loss.backward()
             optimizer.step()
-        print('Epoch {}, Training loss: {}'.format(epoch, loss))
+        print('Epoch {}, Training loss: {} for gpu {}'.format(epoch, loss, gpu_id))
         optimizer.zero_grad()
 
     return model, epoch
@@ -97,18 +88,14 @@ def train_model(model, seed, train, val, test, **config):
 
 
 def train_model_ens(model, seed, **config):
-    print('started')
     model.to('cuda:{}'.format(config['gpu_id']))
-    loaders = create_dataloaders('/notebooks/data/static20892-3-14-preproc0.h5', batch_size=64)
+    loaders = create_dataloaders('/notebooks/data/static20892-3-14-preproc0.h5', 5, batch_size=64)
     train, val, test = loaders['train'],loaders['val'], loaders['test']
     tracker = MultipleObjectiveTracker(
-        poisson=partial(poisson_stop_mc, model, val, config['gpu_id']),
-        correlation=partial(corr_stop_mc, model, val, config['gpu_id']),
+        poisson=partial(poisson_stop_mc_ens, model, val, config['gpu_id']),
+        correlation=partial(corr_stop_mc_ens, model, val, config['gpu_id']),
                         )
-    print('loaders, tracker init for model {}'.format(config['gpu_id']))
     optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'], weight_decay=config['weight_decay'])
-    print('optimizer {}'.format(config['gpu_id']))
-
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                            mode='max',
                                                            factor=0.2,
@@ -116,9 +103,7 @@ def train_model_ens(model, seed, **config):
                                                            threshold=1e-3,
                                                            min_lr=1e-4,
                                                            )
-    print('scheduler {}'.format(config['gpu_id']))
-
-    stop_closure = lambda model: corr_stop_mc(model, val, config['gpu_id'])
+    stop_closure = lambda model: corr_stop_mc_ens(model, val, config['gpu_id'])
     model, epoch = run_model_ens(model=model,
                                  gpu_id=config['gpu_id'],
                                  criterion=PoissonLoss(avg=False),
@@ -140,7 +125,6 @@ def train_model_ens(model, seed, **config):
 
 
 def split_training(ens, model_ids, seed, **config):
-    print('start split training')
     manager = mp.Manager()
     results = manager.list()
     config['manager_list'] = results
@@ -159,8 +143,8 @@ def split_training(ens, model_ids, seed, **config):
 
 def train_ensemble(ensemble, seed, **config):
     all_results = []
-    for i in range(0, 10, 2):
+    for i in range(0, 2, 2):
         res = split_training(ensemble, i, seed, **config)
         all_results.append(res)
-    return all_results
+    return np.array([(x[0][0] + x[1][0]) / 2 for x in all_results]).mean(), all_results, ensemble.state_dict()
 
