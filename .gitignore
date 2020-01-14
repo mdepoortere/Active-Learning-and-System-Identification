@@ -131,3 +131,6 @@ dmypy.json
 .idea
 .DS_Store
 data/
+*.npy
+*.png
+Mouse_CNN_Example.ipynb

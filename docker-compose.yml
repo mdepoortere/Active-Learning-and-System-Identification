@@ -12,6 +12,7 @@ services:
    runtime: nvidia
 
  develop_russel:
+   init: true
    build: .
    volumes:
    - /home/mdepoortere/BALR:/notebooks
@@ -59,13 +60,15 @@ services:
    runtime: nvidia
    entrypoint: python al_learning_loop.py
 
- test_torch_sso:
-   build: ./lib/pytorch-sso
+ test_ensemble:
+   build: .
+   init: true
    volumes:
      - /home/mdepoortere/BALR:/notebooks
    env_file: .env
    runtime: nvidia
-   entrypoint: python /notebooks/lib/pytorch-sso/examples/classification/main.py --config /notebooks/lib/pytorch-sso/examples/classification/configs/cifar10/lenet_vogn.json --download
+   entrypoint: python ./ensemble_testing/test_ensemble_train.py
+
  detached_prod_grow:
    build: .
    volumes:

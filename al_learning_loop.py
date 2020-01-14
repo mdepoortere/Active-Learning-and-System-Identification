@@ -1,6 +1,7 @@
 from torch.utils.data import Subset, DataLoader
 import numpy as np
-from mlutils.data.datasets import StaticImageSet
+from mlutils.data.datasets import StaticImageSet, LabeledImageSet
+from mlutils.data.transforms import StaticTransform, Normalized,  Subsample, ToTensor
 import pickle
 import os
 import datajoint as dj
@@ -30,23 +31,10 @@ Fabrikant().insert1(aa, skip_duplicates=True)
 dat = StaticImageSet('/notebooks/data/static20892-3-14-preproc0.h5', 'images', 'responses')
 Seed().insert([{'seed': 13}], skip_duplicates=True)
 
-
-class LabeledData(torch.utils.data.Dataset):
-    """ Add the indexes of the datapoints as the last column in the response vector
-    """
-    def __init__(self, dat,  im, responses):
-        super().__init__()
-        self.train_idx = np.where(dat.tiers == 'train')[0]
-        self.im = im[self.train_idx]
-        self.responses = torch.tensor(np.hstack([responses[self.train_idx],
-                                                 np.arange(0, np.where(dat.tiers == 'train')[0].size).reshape(-1, 1)]))
-
-    def __getitem__(self, index):
-        return self.im[index], self.responses[index]
-
-    def __len__(self):
-        return self.images
-my_dat = LabeledData(dat, dat.images, dat.responses)
+labeled_dat = LabeledImageSet('./data/static20892-3-14-preproc0.h5', 'images', 'responses')
+idx = (dat.neurons.area == 'V1') & (dat.neurons.layer == 'L2/3')
+labeled_dat.transforms = [Subsample(Subsample(np.where(idx)[0])), ToTensor(cuda=True),
+                          Normalized(np.where(dat.tiers == 'train')[0], dat.responses, cuda=True)]
 
 TOTAL_IM = np.where(dat.tiers == 'train')[0].size
 MAX_IM = TOTAL_IM
@@ -87,7 +75,7 @@ while n_im < MAX_IM:
 
     sample_sd = []
     sample_mean = []
-    scoring_set = Subset(my_dat, list(all_idx - set(selected_idx)))
+    scoring_set = Subset(labeled_dat, list(all_idx - set(selected_idx)))
     scoring_loader = DataLoader(scoring_set, shuffle=True, batch_size=128)
     for batch, labels in scoring_loader:
         mean, sd = mc_estimate(model, batch.cuda(), N_SAMPLES)

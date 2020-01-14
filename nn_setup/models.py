@@ -1,12 +1,15 @@
 from mlutils.layers.readouts import PointPooled2d
 from mlutils.layers.cores import Stacked2dCoreDropOut
-
+from functools import partial
 import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.nn import Parameter
 
+
+def regularizer(readout, gamma_readout):
+    return readout.feature_l1() * gamma_readout
 
 class Encoder(nn.Module):
 
@@ -37,13 +40,15 @@ class Ensemble(nn.Module):
         del config['seeds']
         self.config = config
         self.train_loader = train_loader
-
-        self.model0 = create_model(self.train_loader, self.seeds[0],  **self.config).to('cuda:0')
-        self.model1 = create_model(self.train_loader, self.seeds[1], **self.config).to('cuda:1')
-
+        self.n_models = config['n_models']
+        self.models = nn.ModuleList()
+        for i in range(self.n_models):
+            self.models.append(create_model(self.train_loader,
+                                            self.seeds[i],  **self.config))
+        del self.train_loader
     def forward(self, x):
-        out = [self.model0(x.to('cuda:0')), self.model1(x.to('cuda:1'))]
-        return torch.cat(out)
+        outs = [model(x) for i, model in enumerate(self.models)]
+        return outs
 
     @staticmethod
     def diff_real(preds, true):
@@ -84,17 +89,14 @@ def create_model(train_loader, seed=0, **config):
 
     gamma_readout = 0.1
 
-    def regularizer():
-        return readout.feature_l1() * gamma_readout
-
-    readout.regularizer = regularizer
+    readout.regularizer = partial(regularizer, readout, gamma_readout)
 
     ## Model init
     model = Encoder(core, readout)
     r_mean = transformed_mean
     model.readout.bias.data = r_mean
     model.core.initialize()
-    model = model.cuda()
+    #model = model.cuda()
     model.train()
     return model
 
@@ -102,7 +104,5 @@ def create_model(train_loader, seed=0, **config):
 def create_ensemble(train_loader, **config):
 
     ensemble = Ensemble(train_loader, config)
-
-    ensemble.init_ensemble()
 
     return ensemble

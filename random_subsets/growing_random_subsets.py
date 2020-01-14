@@ -12,8 +12,8 @@ dj.config['database.host'] = os.environ['DJ_HOST']
 dj.config['database.user'] = os.environ['DJ_USERNAME']
 dj.config['database.password'] = os.environ['DJ_PASSWORD']
 dj.config['enable_python_native_blobs'] = True
-schema = dj.schema('mdep_random_subsets_growing_mc', locals())
-dj.config['schema_name'] = "mdep_random_subsets_growing_mc"
+schema = dj.schema('mdep_random_subsets_growing_mean', locals())
+dj.config['schema_name'] = "mdep_random_subsets_growing_mean"
 
 from nnfabrik.main import *
 
@@ -50,16 +50,16 @@ hashes = []
 np.random.seed(12)
 
 for i in np.linspace(0, TOTAL_IM - 477, 150).astype('int32'):
-        dataset_fn = "nn_setup.datamaker.create_dataloaders_rand"
-        dataset_config = dict(file='data/static20892-3-14-preproc0.h5', seed=i,
-                              total_im=TOTAL_IM, n_selected=i, batch_size=64)
-        dataset_hash = make_hash(dataset_config)
+    dataset_fn = "nn_setup.datamaker.create_dataloaders_rand"
+    dataset_config = dict(file='data/static20892-3-14-preproc0.h5', seed=i,
+                          total_im=TOTAL_IM, n_selected=i, batch_size=64)
+    dataset_hash = make_hash(dataset_config)
 
-        dataset_entry = dict(dataset_loader="nn_setup.datamaker.create_dataloaders_rand", dataset_config=dataset_config,
-                             dataset_architect="Matthias Depoortere", dataset_comment="Randomly sampled subset")
-        Dataset().add_entry(**dataset_entry)
+    dataset_entry = dict(dataset_loader="nn_setup.datamaker.create_dataloaders_rand", dataset_config=dataset_config,
+                         dataset_architect="Matthias Depoortere", dataset_comment="Randomly sampled subset")
+    Dataset().add_entry(**dataset_entry)
 
-        restriction = (
-            'dataset_loader in ("{}")'.format("nn_setup.datamaker.create_dataloaders_rand"),
-            'dataset_config_hash in ("{}")'.format(dataset_hash))
-        TrainedModel().populate(*restriction)
+    restriction = (
+        'dataset_loader in ("{}")'.format("nn_setup.datamaker.create_dataloaders_rand"),
+        'dataset_config_hash in ("{}")'.format(dataset_hash))
+    TrainedModel().populate(*restriction)
