@@ -1,4 +1,4 @@
-From sinzlab/pytorch:dj_v0.12.0
+From sinzlab/pytorch:v1.3.1-cuda10.1-dj0.12.4
 # install third-party libraries
 RUN pip3 --no-cache-dir install\
                         gitpython

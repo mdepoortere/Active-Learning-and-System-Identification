@@ -1,6 +1,10 @@
-from torch.utils.data import Subset, DataLoader
 import numpy as np
+from nn_setup.datasets import LabeledImageSet
+from mlutils.data.transforms import ToTensor, Subsample
 from mlutils.data.datasets import StaticImageSet
+from nn_setup.transforms import Normalized
+from mlutils.data.transforms import Subsample, ToTensor
+from torch.utils.data import Subset, DataLoader
 import pickle
 import os
 import datajoint as dj
@@ -8,8 +12,8 @@ dj.config['database.host'] = os.environ['DJ_HOST']
 dj.config['database.user'] = os.environ['DJ_USERNAME']
 dj.config['database.password'] = os.environ['DJ_PASSWORD']
 dj.config['enable_python_native_blobs'] = True
-schema = dj.schema('mdep_nnfabrik_mc_al', locals())
-dj.config['schema_name'] = "mdep_nnfabrik_mc_al"
+schema = dj.schema('mdep_nnfabrik_al_norm_mc', locals())
+dj.config['schema_name'] = "mdep_nnfabrik_al_norm_mc"
 
 from nnfabrik.main import *
 import nn_setup
@@ -30,34 +34,24 @@ Fabrikant().insert1(aa, skip_duplicates=True)
 dat = StaticImageSet('/notebooks/data/static20892-3-14-preproc0.h5', 'images', 'responses')
 Seed().insert([{'seed': 13}], skip_duplicates=True)
 
-
-class LabeledData(torch.utils.data.Dataset):
-    """ Add the indexes of the datapoints as the last column in the response vector
-    """
-    def __init__(self, dat,  im, responses):
-        super().__init__()
-        self.train_idx = np.where(dat.tiers == 'train')[0]
-        self.im = im[self.train_idx]
-        self.responses = torch.tensor(np.hstack([responses[self.train_idx],
-                                                 np.arange(0, np.where(dat.tiers == 'train')[0].size).reshape(-1, 1)]))
-
-    def __getitem__(self, index):
-        return self.im[index], self.responses[index]
-
-    def __len__(self):
-        return self.images
-my_dat = LabeledData(dat, dat.images, dat.responses)
+labeled_dat = LabeledImageSet('./data/static20892-3-14-preproc0.h5', 'images', 'responses')
+idx = (labeled_dat.neurons.area == 'V1') & (labeled_dat.neurons.layer == 'L2/3')
+labeled_dat.transforms = [Subsample(np.where(idx)[0]), ToTensor(cuda=True),
+                          Normalized(np.where(dat.tiers == 'train')[0], dat.responses, cuda=True)]
 
 TOTAL_IM = np.where(dat.tiers == 'train')[0].size
 MAX_IM = TOTAL_IM
 N_SAMPLES = 100
-N_AQUIRE = 20
+N_AQUIRE = 10
 n_im = 400
 
-selected_idx = np.random.choice(np.arange(TOTAL_IM), n_im)
-all_idx = set(range(TOTAL_IM))
+selected_idx = set(np.random.choice(np.where(dat.tiers == 'train')[0], size=n_im, replace=False))
+all_idx = set(np.where(dat.tiers == 'train')[0])
 
 model_config = load_obj('best_model_config')
+model_config['random_seed'] = 5
+model_config['gpu_id'] = 0
+
 model_entry = dict(configurator="nn_setup.models.create_model", config_object=model_config,
                    model_architect="Matthias Depoortere", model_comment="Best model on full dataset")
 Model().add_entry(**model_entry)
@@ -87,13 +81,13 @@ while n_im < MAX_IM:
 
     sample_sd = []
     sample_mean = []
-    scoring_set = Subset(my_dat, list(all_idx - set(selected_idx)))
+    scoring_set = Subset(labeled_dat, list(all_idx - set(selected_idx)))
     scoring_loader = DataLoader(scoring_set, shuffle=True, batch_size=128)
     for batch, labels in scoring_loader:
         mean, sd = mc_estimate(model, batch.cuda(), N_SAMPLES)
 
-        sample_mean.append([labels[:, -1], mean])
-        sample_sd.append([labels[:, -1], sd])
+        sample_mean.append([labels[:, -1].cpu(), mean])
+        sample_sd.append([labels[:, -1].cpu(), sd])
 
     indexes = []
     sd = []
