@@ -33,7 +33,7 @@ def eval_state_ensemble(ensemble):
 def mc_estimate(model, x, n_samples):
     with torch.no_grad():
         with eval_state_mc(model):
-            samples_batch = torch.stack([model(x) for _ in range(n_samples)], dim=0)
+            samples_batch = torch.stack([model(x).cpu() for _ in range(n_samples)], dim=0)
             mean = torch.mean(samples_batch, dim=0).cpu()
             sd = torch.std(samples_batch, dim=[0]).cpu()
             sd = torch.mean(sd, dim=1)
@@ -44,7 +44,7 @@ def mc_estimate(model, x, n_samples):
 def mean_estimate(model, x, n_samples):
     with torch.no_grad():
         with eval_state_mc(model):
-            samples_batch = torch.stack([model(x) for _ in range(n_samples)], dim=0)
+            samples_batch = torch.stack([model(x).cpu() for _ in range(n_samples)], dim=0)
             mean = torch.mean(samples_batch, dim=0).cpu()
 
     return mean

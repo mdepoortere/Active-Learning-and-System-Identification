@@ -51,18 +51,27 @@ services:
      - /home/mdepoortere/mdep/BALR:/notebooks
    env_file: .env
    runtime: nvidia
-   entrypoint: python al_learning_loop.py
- detached_prod_pyth_al:
+   entrypoint: python ensemble_al_diff.py
+ detached_prod_al_ens_var:
    build: .
    volumes:
      - /home/mdepoortere/BALR:/notebooks
    env_file: .env
    runtime: nvidia
-   entrypoint: python al_learning_loop.py
+   entrypoint: python ensemble_al_var.py
+
+ detached_prod_al_ens_diff:
+   build: .
+   volumes:
+     - /home/mdepoortere/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python ensemble_al_diff.py
 
  test_ensemble:
    build: .
    init: true
+   pids_limit: 100
    volumes:
      - /home/mdepoortere/BALR:/notebooks
    env_file: .env

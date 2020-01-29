@@ -12,8 +12,8 @@ dj.config['database.host'] = os.environ['DJ_HOST']
 dj.config['database.user'] = os.environ['DJ_USERNAME']
 dj.config['database.password'] = os.environ['DJ_PASSWORD']
 dj.config['enable_python_native_blobs'] = True
-schema = dj.schema('mdep_random_subsets_growing_mean', locals())
-dj.config['schema_name'] = "mdep_random_subsets_growing_mean"
+schema = dj.schema('mdep_random_subsets_growing_norm', locals())
+dj.config['schema_name'] = "mdep_random_subsets_growing_norm"
 
 from nnfabrik.main import *
 
@@ -52,7 +52,7 @@ np.random.seed(12)
 for i in np.linspace(0, TOTAL_IM - 477, 150).astype('int32'):
     dataset_fn = "nn_setup.datamaker.create_dataloaders_rand"
     dataset_config = dict(file='data/static20892-3-14-preproc0.h5', seed=i,
-                          total_im=TOTAL_IM, n_selected=i, batch_size=64)
+                          total_im=TOTAL_IM, n_selected=i, batch_size=64, norm=True)
     dataset_hash = make_hash(dataset_config)
 
     dataset_entry = dict(dataset_loader="nn_setup.datamaker.create_dataloaders_rand", dataset_config=dataset_config,

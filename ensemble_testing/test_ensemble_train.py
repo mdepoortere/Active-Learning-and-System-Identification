@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import logging
 sys.path.append('/notebooks')
 import torch
 import torch.nn as nn
@@ -301,13 +302,17 @@ def train_ensemble(ensemble, seed, **config):
 
 
 if __name__ == '__main__':
+    mp.log_to_stderr(logging.DEBUG)
     model_config = dict(dropout_p=0.5, gamma_hidden=100, gamma_input=1)
-    model_config['seeds'] = list(range(2))
-    model_config['n_models'] = 2
+    model_config['seeds'] = list(range(10))
+    model_config['n_models'] = 10
 
-    loaders = create_dataloaders('/notebooks/data/static20892-3-14-preproc0.h5', 5, batch_size=64)
+    loaders = create_dataloaders('/notebooks/data/static20892-3-14-preproc0.h5', 5, batch_size=64, norm=True)
 
     ens = create_ensemble(loaders['train'], **model_config)
-    train_config = dict(lr=0.01, weight_decay=0.0000001, max_iter=200, n_gpu=2)
+    train_config = dict(lr=0.01, weight_decay=0.0000001, max_iter=1, n_gpu=2)
     mp.set_start_method('spawn')
-    train_ensemble(ens, 5, **train_config)
+    all_results = train_ensemble(ens, 5, **train_config)
+    print('Training has ended \n \n')
+    print(all_results[0], '\n')
+    #print([(x[0][0], x[1][0]) for x in all_results[1]])

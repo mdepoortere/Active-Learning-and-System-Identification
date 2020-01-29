@@ -1,5 +1,5 @@
 from mlutils.layers.readouts import PointPooled2d
-from mlutils.layers.cores import Stacked2dCoreDropOut
+from nn_setup.cores import Stacked2dCoreDropOut
 from functools import partial
 import numpy as np
 import torch
@@ -52,15 +52,18 @@ class Ensemble(nn.Module):
 
     @staticmethod
     def diff_real(preds, true):
-        return F.mse_loss(preds, true, reduction='mean')
+        diff = 0
+        for pred in preds:
+            diff += F.mse_loss(pred, true, reduction='mean')
+        return diff
 
     @staticmethod
     def variance(preds):
-        return preds.std(dim=0)
+        return torch.cat(preds, dim=0).std(dim=0).mean()
 
 
-def create_model(train_loader, seed=0, **config):
-    np.random.seed(seed)
+def create_model(train_loader, seed=0, gpu_id=0, **config):
+    np.random.seed(config['random_seed'])
     in_shape = train_loader.img_shape
     n_neurons = train_loader.n_neurons
     transformed_mean = train_loader.transformed_mean
@@ -96,7 +99,7 @@ def create_model(train_loader, seed=0, **config):
     r_mean = transformed_mean
     model.readout.bias.data = r_mean
     model.core.initialize()
-    #model = model.cuda()
+    model = model.to('cuda:{}'.format(gpu_id))
     model.train()
     return model
 

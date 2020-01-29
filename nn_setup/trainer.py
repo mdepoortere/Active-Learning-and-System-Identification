@@ -121,30 +121,46 @@ def train_model_ens(model, seed, **config):
                                  tracker=tracker,
                                  )
     tracker.finalize()
-    config['manager_list'].append([np.max(tracker.log['correlation']), tracker.log, config['gpu_id']])
+    np.save('max_corr', np.max(tracker.log['correlation']))
+    #config['manager_list'].append([np.max(tracker.log['correlation'])])  #tracker.log, config['gpu_id']])
 
+
+def print_gpu_id(gpu_id):
+    print(gpu_id)
 
 def split_training(ens, model_ids, seed, **config):
-    manager = mp.Manager()
-    results = manager.list()
-    config['manager_list'] = results
+    print('start split training')
+    #manager = mp.Manager()
+    #results = manager.list()
+    #config['manager_list'] = results
     processes = []
     for gpu_id, model in enumerate(ens.models[model_ids:model_ids + 2]):
         config['gpu_id'] = gpu_id
-        p = mp.Process(target=train_model_ens, args=(model, 5,),
-                       kwargs=config)
-        p.start()
+        p = mp.Process(target=train_model_ens, args=(model, 5, ), name='model{}_gpu{}'.format(), kwargs=config)
+        print(p)
+        print(p.pid)
+        try:
+            p.start()
+        finally:
+            print(p.pid)
         processes.append(p)
     for p in processes:
         p.join()
-    all_results = [result for result in results]
-    return all_results
+    #all_results = [result for result in results]
+    #return all_results
 
 
 def train_ensemble(ensemble, seed, **config):
     all_results = []
-    for i in range(0, 2, 2):
-        res = split_training(ensemble, i, seed, **config)
-        all_results.append(res)
-    return np.array([(x[0][0] + x[1][0]) / 2 for x in all_results]).mean(), all_results, ensemble.state_dict()
+    models_trained = 0
+    model_counter = 0
+    gpu_id = 0
+    running_processes = []
+    while models_trained < ensemble.n_models:
+        if len(running_processes) < 2:
+            p = mp.Process(target=train_model_ens, args=(ensemble.models[model_counter], 5, ), name='model{}_gpu{}'.format(model_counter,gpu_id), kwargs=config)
+            p.start()
+            running_processes.append(p)
+    print('END of Train Function')
+    #return all_results #np.array([(x[0][0] + x[1][0]) / 2 for x in all_results]).mean(), all_results, ensemble.state_dict()
 
