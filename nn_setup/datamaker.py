@@ -82,7 +82,7 @@ def create_dataloaders_rand(file, seed, total_im, n_selected, batch_size, norm=T
     if norm:
         dat.transforms.append(Normalized(np.where(dat.tiers == 'train')[0], dat.responses, cuda=cuda))
     np.random.seed(seed)
-    selected_indexes = set(np.random.choice(np.where(dat.tiers == 'train')[0], size=n_selected, replace=False))
+    selected_indexes = np.random.choice(np.where(dat.tiers == 'train')[0], size=n_selected, replace=False)
     selected_set = Subset(dat, selected_indexes)
     train_loader = DataLoader(selected_set,
                               batch_size=batch_size)

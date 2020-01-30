@@ -30,16 +30,15 @@ Fabrikant().insert1(dict(architect_name='Matthias Depoortere',
 
 Seed().insert([{'seed': 13}], skip_duplicates=True)
 
-dat = StaticImageSet('data/static20892-3-14-preproc0.h5', 'images', 'responses')
+dat = StaticImageSet('/notebooks/data/static20892-3-14-preproc0.h5', 'images', 'responses')
 TOTAL_IM = np.where(dat.tiers == 'train')[0].size
 
-model_fn = "nn_setup.models.create_model"
 model_config = load_obj('best_model_config')
+model_config['random_seed'] = 5
 model_entry = dict(configurator="nn_setup.models.create_model", config_object=model_config,
                    model_architect="Matthias Depoortere", model_comment="Best model hp on full dataset")
 Model().add_entry(**model_entry)
 
-trainer_fn = "trainer.train"
 trainer_config = load_obj('best_train_config')
 trainer_entry = dict(training_function="nn_setup.trainer.train_model", training_config=trainer_config,
                      trainer_architect="Matthias Depoortere", trainer_comment="best trainer on full dataset")
@@ -49,9 +48,8 @@ all_index_sets = []
 hashes = []
 np.random.seed(12)
 
-for i in np.linspace(0, TOTAL_IM - 477, 150).astype('int32'):
-    dataset_fn = "nn_setup.datamaker.create_dataloaders_rand"
-    dataset_config = dict(file='data/static20892-3-14-preproc0.h5', seed=i,
+for i in np.linspace(500, TOTAL_IM, 150).astype('int32'):
+    dataset_config = dict(file='/notebooks/data/static20892-3-14-preproc0.h5', seed=i,
                           total_im=TOTAL_IM, n_selected=i, batch_size=64, norm=True)
     dataset_hash = make_hash(dataset_config)
 
