@@ -85,3 +85,17 @@ services:
    env_file: .env
    runtime: nvidia
    entrypoint: python ./random_subsets/growing_random_subsets.py
+ aws_al:
+   image: al
+   volumes:
+     - /home/ubuntu/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python al_learning_loop.py
+ aws_random:
+   image: random
+   volumes:
+     - /home/ubuntu/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python ./random_subsets/growing_random_subsets.py

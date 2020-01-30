@@ -18,12 +18,14 @@ def run(model, criterion, optimizer, scheduler, stop_closure, train_loader,
                                          tolerance=tolerance, restore_best=restore_best,
                                          tracker=tracker):
         scheduler.step(val_obj)
+        running_loss = 0
         for images, responses in train_loader:
             optimizer.zero_grad()
             loss = full_objective(images.float().cuda(), responses.float().cuda(), model, criterion)
             loss.backward()
             optimizer.step()
-        print('Epoch {}, Training loss: {}'.format(epoch, loss))
+            running_loss += loss.detach().cpu().item()
+        print('Epoch {}, Training loss: {}'.format(epoch, running_loss/len(train_loader)))
         optimizer.zero_grad()
 
     return model, epoch
@@ -47,6 +49,7 @@ def run_model_ens(model, gpu_id, criterion, optimizer, scheduler, stop_closure, 
         optimizer.zero_grad()
 
     return model, epoch
+
 
 def train_model(model, seed, train, val, test, **config):
 
