@@ -3,7 +3,7 @@ from PIL import Image
 from torchvision import datasets
 from torchvision.transforms.functional import to_grayscale
 
-from utils import gabor_fn, deformed_image
+from toy_data.utils import gabor_fn, deformed_image
 
 
 def gen_gabor_stim(img_size, n=1, seed=None, normalize=True):
