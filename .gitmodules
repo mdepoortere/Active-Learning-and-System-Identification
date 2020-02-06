@@ -4,6 +4,4 @@
 [submodule "lib/nnfabrik"]
 	path = lib/nnfabrik
 	url = https://github.com/sinzlab/nnfabrik
-[submodule "lib/pytorch-sso"]
-	path = lib/pytorch-sso
-	url = https://github.com/cybertronai/pytorch-sso
+
