@@ -18,11 +18,6 @@ dj.config['schema_name'] = "mdep_nnfabrik_al_ens_diff"
 
 from nnfabrik.main import *
 
-import nn_setup
-from nn_setup import datamaker
-from estimator import mc_estimate
-from nn_setup.models import create_model
-
 
 def load_obj(file):
     with open('./data/' + file + '.pkl', 'rb') as f:

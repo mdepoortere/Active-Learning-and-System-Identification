@@ -1,6 +1,5 @@
 import numpy as np
 from nn_setup.datasets import LabeledImageSet
-from mlutils.data.transforms import ToTensor, Subsample
 from mlutils.data.datasets import StaticImageSet
 from nn_setup.transforms import Normalized
 from mlutils.data.transforms import Subsample, ToTensor
@@ -17,7 +16,7 @@ dj.config['schema_name'] = "mdep_nnfabrik_al_norm_mc"
 
 from nnfabrik.main import *
 import nn_setup
-from estimator import mc_estimate
+from nn_setup.estimator import mc_estimate
 from nn_setup.models import create_model
 
 

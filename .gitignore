@@ -134,3 +134,5 @@ data/
 *.npy
 *.png
 Mouse_CNN_Example.ipynb
+*.hdf5
+*ipynb
