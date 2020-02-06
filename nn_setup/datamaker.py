@@ -107,3 +107,36 @@ def create_dataloaders_rand(file, seed, total_im, n_selected, batch_size, norm=T
     loaders = {'train': train_loader, 'val': val_loader, 'test': test_loader}
 
     return loaders
+
+
+def create_dataloaders_synth(file, seed, n_selected, batch_size, norm=True, cuda=True):
+    dat = StaticImageSet(file, 'images', 'responses')
+    dat.transforms = [ToTensor(cuda=cuda)]
+    if norm:
+        dat.transforms.append(Normalized(np.where(dat.tiers == 'train')[0], dat.responses, cuda=cuda))
+    np.random.seed(seed)
+    selected_indexes = np.random.choice(np.where(dat.tiers == 'train')[0], size=n_selected, replace=False)
+    selected_set = Subset(dat, selected_indexes)
+    train_loader = DataLoader(selected_set,
+                              batch_size=batch_size)
+
+    train_loader.img_shape = dat.img_shape
+    train_loader.n_neurons = dat.n_neurons
+    _, train_loader.transformed_mean = dat.transformed_mean()
+
+    val_loader = DataLoader(dat,
+                            sampler=SubsetRandomSampler(np.where(dat.tiers == 'validation')[0]),
+                            batch_size=batch_size)
+    val_loader.img_shape = dat.img_shape
+    val_loader.n_neurons = dat.n_neurons
+
+    test_loader = DataLoader(dat,
+                             sampler=SubsetRandomSampler(np.where(dat.tiers == 'test')[0]),
+                             batch_size=batch_size)
+
+    test_loader.img_shape = dat.img_shape
+    test_loader.n_neurons = dat.n_neurons
+
+    loaders = {'train': train_loader, 'val': val_loader, 'test': test_loader}
+
+    return loaders

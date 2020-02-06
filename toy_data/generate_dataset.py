@@ -1,5 +1,7 @@
 import h5py
 from mlutils.data.datasets import StaticImageSet
+import torch
+from torch.distributions import Poisson
 from synthetic_data import gen_gabor_RF
 from utils import compute_activity_simple
 
@@ -16,7 +18,9 @@ def main():
     gabor_rf = gen_gabor_RF(img_shape, rf_shape, n=n_neurons, seed=random_seed)
     images= dat[()].images
     images = images.reshape(6000, 36, 64)
-    responses = compute_activity_simple(images/255, gabor_rf)
+    firing_rates = compute_activity_simple(images/255, gabor_rf)
+    dist = Poisson(torch.tensor(firing_rates))
+    responses = dist.sample().numpy()
     data_file = h5py.File("toy_dataset.hdf5", "w")
 
     im_set = data_file.create_dataset('images', data=dat[()].images)
