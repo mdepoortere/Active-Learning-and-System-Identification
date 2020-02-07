@@ -8,6 +8,7 @@ COPY lib /notebooks/lib
 # install ml-utils (in develop mode)
 RUN cd lib/ml-utils/ && python3 setup.py develop
 RUN cd lib/nnfabrik/ && python3 setup.py develop
+RUN cd lib/nn-setup/ && python3 setup.py develop
 
 
 

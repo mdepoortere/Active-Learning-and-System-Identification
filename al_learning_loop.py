@@ -1,7 +1,7 @@
 import numpy as np
-from nn_setup.datasets import LabeledImageSet
+from lib.nn_setup.nnsetup.datasets import LabeledImageSet
 from mlutils.data.datasets import StaticImageSet
-from nn_setup.transforms import Normalized
+from lib.nn_setup.nnsetup.transforms import Normalized
 from mlutils.data.transforms import Subsample, ToTensor
 from torch.utils.data import Subset, DataLoader
 import pickle
@@ -15,9 +15,8 @@ schema = dj.schema('mdep_nnfabrik_al_norm_mc', locals())
 dj.config['schema_name'] = "mdep_nnfabrik_al_norm_mc"
 
 from nnfabrik.main import *
-import nn_setup
-from nn_setup.estimator import mc_estimate
-from nn_setup.models import create_model
+from lib.nn_setup.nnsetup.estimator import mc_estimate
+from lib.nn_setup.nnsetup.models import create_model
 
 
 
@@ -51,12 +50,12 @@ model_config = load_obj('best_model_config')
 model_config['random_seed'] = 5
 model_config['gpu_id'] = 0
 
-model_entry = dict(configurator="nn_setup.models.create_model", config_object=model_config,
+model_entry = dict(configurator="nn-setup.models.create_model", config_object=model_config,
                    model_architect="Matthias Depoortere", model_comment="Best model on full dataset")
 #Model().add_entry(**model_entry)
 
 trainer_config = load_obj('best_train_config')
-trainer_entry = dict(training_function="nn_setup.trainer.train_model", training_config=trainer_config,
+trainer_entry = dict(training_function="nn-setup.trainer.train_model", training_config=trainer_config,
                      trainer_architect="Matthias Depoortere", trainer_comment="best trainer on full dataset")
 #Trainer().add_entry(**trainer_entry)
 al_statistics = []
@@ -67,15 +66,15 @@ while n_im < MAX_IM:
                           batch_size=64)
     dataset_hash = make_hash(dataset_config)
 
-    dataset_entry = dict(dataset_loader="nn_setup.datamaker.create_dataloaders_al", dataset_config=dataset_config,
+    dataset_entry = dict(dataset_loader="nn-setup.datamaker.create_dataloaders_al", dataset_config=dataset_config,
                          dataset_architect="Matthias Depoortere", dataset_comment=" Actively grown dataset")
     Dataset().add_entry(**dataset_entry)
     restriction = (
-        'dataset_loader in ("{}")'.format("nn_setup.datamaker.create_dataloaders_al"),
+        'dataset_loader in ("{}")'.format("nn-setup.datamaker.create_dataloaders_al"),
         'dataset_config_hash in ("{}")'.format(dataset_hash))
     TrainedModel().populate(*restriction)
 
-    model = create_model(nn_setup.datamaker.create_dataloaders_al(**dataset_config)['train'], Seed.fetch('seed'),
+    model = create_model(lib.nn_setup.datamaker.create_dataloaders_al(**dataset_config)['train'], Seed.fetch('seed'),
                          **model_config)
     model_param_path = \
     (TrainedModel().ModelStorage & "dataset_config_hash = '{}'".format(dataset_hash)).fetch("model_state")[0]

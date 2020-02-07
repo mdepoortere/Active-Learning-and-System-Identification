@@ -99,3 +99,10 @@ services:
    env_file: .env
    runtime: nvidia
    entrypoint: python ./random_subsets/growing_random_subsets.py
+ ens_dist:
+   image: mat_al
+   volumes:
+     - /home/mdepoortere/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python ensemble_testing/ens_dist.py

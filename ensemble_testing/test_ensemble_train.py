@@ -3,27 +3,16 @@
 import sys
 import logging
 sys.path.append('/notebooks')
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from mlutils.measures import corr, PoissonLoss
-import warnings
 from mlutils.layers.readouts import PointPooled2d
 from mlutils.layers.cores import Stacked2dCoreDropOut
-from functools import partial
-import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
-from torch.nn import Parameter
-from nn_setup.stop_measures import eval_state_mc
 
-from nn_setup.stop_measures import full_objective
-from nn_setup.trainer import train_ensemble
-from nn_setup.datamaker import create_dataloaders
+from lib.nn_setup.nnsetup.trainer import train_ensemble
+from lib.nn_setup.nnsetup.datamaker import create_dataloaders
 import multiprocessing as mp
 
-from mlutils.training import early_stopping, MultipleObjectiveTracker
 from functools import partial
 
 
@@ -128,14 +117,7 @@ def create_ensemble(train_loader, **config):
     return ensemble
 
 
-from mlutils.data.datasets import StaticImageSet
-from mlutils.data.transforms import Subsample, ToTensor
-
 import numpy as np
-
-from torch.utils.data import DataLoader, Subset
-from torch.utils.data.sampler import SubsetRandomSampler
-
 
 """def create_dataloaders(file, batch_size):
     dat = StaticImageSet(file, 'images', 'responses')
