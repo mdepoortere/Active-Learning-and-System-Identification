@@ -1,5 +1,6 @@
 import numpy as np
 from nnsetup.models import create_model
+from nnsetup.estimator import mc_estimate
 import nnsetup
 from nnfabrik.main import *
 
@@ -39,3 +40,15 @@ def calc_loss_labels(model, scoring_loader, criterion):
     preds_labels = np.concatenate(preds_labels, axis=0)
     loss_model = np.concatenate(loss_model)
     return loss_model, preds_labels
+
+
+def calc_mean_sd(model, scoring_loader, N_SAMPLES):
+
+    sample_sd = []
+    sample_mean = []
+    for batch, labels in scoring_loader:
+        mean, sd = mc_estimate(model, batch.cuda(), N_SAMPLES)
+
+        sample_mean.append([labels[:, -1].cpu(), mean])
+        sample_sd.append([labels[:, -1].cpu(), sd])
+    return sample_mean, sample_sd
