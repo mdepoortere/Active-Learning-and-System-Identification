@@ -51,6 +51,7 @@ all_idx = set(np.where(dat.tiers == 'train')[0])
 model_config = load_obj('best_model_config')
 model_config['random_seed'] = 5
 model_config['gpu_id'] = 0
+model_hash = make_hash(model_config)
 
 model_entry = dict(configurator="nnsetup.models.create_model", config_object=model_config,
                    model_architect="Matthias Depoortere", model_comment="Best model on full dataset")
