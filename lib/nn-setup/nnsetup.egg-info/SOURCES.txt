@@ -1,0 +1,16 @@
+setup.py
+nnsetup/__init__.py
+nnsetup/al_tools.py
+nnsetup/cores.py
+nnsetup/datamaker.py
+nnsetup/datasets.py
+nnsetup/estimator.py
+nnsetup/models.py
+nnsetup/stop_measures.py
+nnsetup/trainer.py
+nnsetup/transforms.py
+nnsetup.egg-info/PKG-INFO
+nnsetup.egg-info/SOURCES.txt
+nnsetup.egg-info/dependency_links.txt
+nnsetup.egg-info/requires.txt
+nnsetup.egg-info/top_level.txt

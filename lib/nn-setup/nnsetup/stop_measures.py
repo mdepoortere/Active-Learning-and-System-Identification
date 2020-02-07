@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 from mlutils.measures import corr
 from scipy import stats
-from nn_setup.estimator import mean_estimate
+from nnsetup.estimator import mean_estimate
 
 
 @contextmanager

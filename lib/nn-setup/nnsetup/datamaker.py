@@ -1,6 +1,6 @@
 from mlutils.data.datasets import StaticImageSet
 from mlutils.data.transforms import Subsample, ToTensor
-from nn_setup.transforms import Normalized
+from nnsetup.transforms import Normalized
 
 
 import numpy as np

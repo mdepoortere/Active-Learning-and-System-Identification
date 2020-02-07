@@ -1,7 +1,6 @@
-import torch
 import numpy as np
-import nn_setup
-from nn_setup.models import create_model
+from nnsetup.models import create_model
+import nnsetup
 from nnfabrik.main import *
 
 def calc_preds_labels(model, scoring_loader):
@@ -19,7 +18,7 @@ def calc_preds_labels(model, scoring_loader):
 
 def load_latest_model(dataset_config, model_config, dataset_hash, model_hash):
 
-    model = create_model(nn_setup.datamaker.create_dataloaders_al(**dataset_config)['train'],
+    model = create_model(nnsetup.datamaker.create_dataloaders_al(**dataset_config)['train'],
                          **model_config)
     model_param_path = (TrainedModel().ModelStorage & "dataset_config_hash = '{}'".format(
         dataset_hash) & "config_hash = '{}'".format(model_hash)).fetch("model_state")[0]

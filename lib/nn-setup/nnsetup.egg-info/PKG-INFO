@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: nnsetup
+Version: 0.0.0
+Summary: Tools for active learning and MC-dropout 
+Home-page: https://github.com/mdepoortere/BALR
+Author: Matthias Depoortere
+Author-email: Depoortere.matthias@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
