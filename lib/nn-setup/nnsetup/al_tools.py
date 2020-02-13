@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from mlutils.measures import corr
 from nnsetup.models import create_model
 from nnsetup.estimator import mc_estimate
