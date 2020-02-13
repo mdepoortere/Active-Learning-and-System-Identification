@@ -13,7 +13,7 @@ services:
 
  develop_russel:
    init: true
-   build: .
+   image: mat_al
    volumes:
    - /home/mdepoortere/BALR:/notebooks
    ports:
@@ -46,12 +46,20 @@ services:
    entrypoint: python al_learning_loop.py
 
  detached_prod_gpu_al:
-   build: .
+   image: mat_al
    volumes:
      - /home/mdepoortere/mdep/BALR:/notebooks
    env_file: .env
    runtime: nvidia
-   entrypoint: python ensemble_al_diff.py
+   entrypoint: python ./ensemble_methods/ensemble_al_diff.py
+ detached_prod_gpu_var:
+   image: mat_al
+   volumes:
+     - /home/mdepoortere/mdep/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python ./ensemble_methods/ensemble_al_var.py
+
  detached_prod_al_ens_var:
    build: .
    volumes:
@@ -61,12 +69,12 @@ services:
    entrypoint: python ensemble_al_var.py
 
  detached_prod_al_ens_diff:
-   build: .
+   image: mat_al
    volumes:
      - /home/mdepoortere/BALR:/notebooks
    env_file: .env
    runtime: nvidia
-   entrypoint: python ensemble_al_diff.py
+   entrypoint: python ./ensemble_methods/ensemble_al_diff.py
 
  test_ensemble:
    build: .
@@ -82,6 +90,13 @@ services:
    build: .
    volumes:
      - /home/mdepoortere/BALR:/notebooks
+   env_file: .env
+   runtime: nvidia
+   entrypoint: python ./random_subsets/growing_random_subsets.py
+ gpu_rand:
+   image: mat_al
+   volumes:
+     - /home/mdepoortere/mdep/BALR:/notebooks
    env_file: .env
    runtime: nvidia
    entrypoint: python ./random_subsets/growing_random_subsets.py
