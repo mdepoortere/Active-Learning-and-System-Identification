@@ -23,8 +23,8 @@ def load_latest_model(dataset_config, model_config, dataset_hash, model_hash):
 
     model = create_model(datamaker.create_dataloaders_synth(**dataset_config),
                          **model_config)
-    model_param_path = (TrainedModel().ModelStorage & "dataset_config_hash = '{}'".format(
-        dataset_hash) & "config_hash = '{}'".format(model_hash)).fetch("model_state")[0]
+    model_param_path = (TrainedModel().ModelStorage & "dataset_hash = '{}'".format(
+        dataset_hash) & "model_hash = '{}'".format(model_hash)).fetch("model_state")[0]
     model.load_state_dict(torch.load(model_param_path))
     return model
 
