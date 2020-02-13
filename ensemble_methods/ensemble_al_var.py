@@ -12,10 +12,11 @@ dj.config['database.host'] = os.environ['DJ_HOST']
 dj.config['database.user'] = os.environ['DJ_USERNAME']
 dj.config['database.password'] = os.environ['DJ_PASSWORD']
 dj.config['enable_python_native_blobs'] = True
-schema = dj.schema('mdep_nnfabrik_al_ens_var', locals())
-dj.config['schema_name'] = "mdep_nnfabrik_al_ens_var"
+schema = dj.schema('mdep_ens_toy_var', locals())
+dj.config['schema_name'] = "mdep_ens_toy_var"
 
 from nnfabrik.main import *
+from nnsetup.tables import TrainedModel
 from nnsetup.al_tools import calc_preds_labels, load_latest_model
 
 
@@ -24,26 +25,26 @@ def load_obj(file):
         return pickle.load(f)
 
 
-aa = dict(architect_name="matthias Depoortere",
+aa = dict(fabrikant_name="matthias Depoortere",
           email="depoortere.matthias@gmail;com", affiliation="sinzlab", dj_username="mdep")
 Fabrikant().insert1(aa, skip_duplicates=True)
-dat = StaticImageSet('/notebooks/data/static20892-3-14-preproc0.h5', 'images', 'responses')
 Seed().insert([{'seed': 13}], skip_duplicates=True)
 
 
-my_dat = LabeledImageSet('/notebooks/data/static20892-3-14-preproc0.h5', 'images', 'responses')
-idx = (my_dat.neurons.area == 'V1') & (my_dat.neurons.layer == 'L2/3')
-my_dat.transforms = [Subsample(np.where(idx)[0]), ToTensor(cuda=True),
-                          Normalized(np.where(dat.tiers == 'train')[0], dat.responses, cuda=True)]
+my_dat = LabeledImageSet('/notebooks/toy_data/toy_dataset.hdf5', 'images', 'responses')
+#idx = (my_dat.neurons.area == 'V1') & (my_dat.neurons.layer == 'L2/3')
+my_dat.transforms = [ToTensor(cuda=True),
+                     Normalized(np.where(my_dat.tiers == 'train')[0], my_dat.responses, cuda=True)]
 
-TOTAL_IM = np.where(dat.tiers == 'train')[0].size
+
+TOTAL_IM = np.where(my_dat.tiers == 'train')[0].size
 MAX_IM = TOTAL_IM
 N_AQUIRE = 50
 n_im = 500
 
-selected_idx = set(np.random.choice(np.where(dat.tiers == 'train')[0], size=n_im, replace=False))
+selected_idx = set(np.random.choice(np.where(my_dat.tiers == 'train')[0], size=n_im, replace=False))
 
-all_idx = set(np.where(dat.tiers == 'train')[0])
+all_idx = set(np.where(my_dat.tiers == 'train')[0])
 
 model_hashes = []
 for i in range(8):
@@ -52,29 +53,30 @@ for i in range(8):
 
     model_hash = make_hash(model_config)
     model_hashes.append(model_hash)
-    model_entry = dict(configurator="nnsetup.models.create_model", config_object=model_config,
-                   model_architect="Matthias Depoortere", model_comment="Best model config")
+    model_entry = dict(model_fn="nnsetup.models.create_model", model_config=model_config,
+                       model_fabrikant="Matthias Depoortere", model_comment="Best model config")
     Model().add_entry(**model_entry)
 
 trainer_config = load_obj('best_train_config')
+trainer_config['patience'] = 5
 
-trainer_entry = dict(training_function="nnsetup.trainer.train_model", training_config=trainer_config,
-                     trainer_architect="Matthias Depoortere", trainer_comment="best trainer on full dataset")
+trainer_entry = dict(trainer_fn="nnsetup.trainer.train_model", trainer_config=trainer_config,
+                     trainer_fabrikant="Matthias Depoortere", trainer_comment="best trainer on full dataset")
 Trainer().add_entry(**trainer_entry)
 
 while n_im < MAX_IM:
-
     predictions = []
     collected_labels = []
-    dataset_config = dict(file='/notebooks/data/static20892-3-14-preproc0.h5', selected_idx=list(selected_idx), batch_size=64, norm=True, cuda=True)
+    dataset_config = dict(file='/notebooks/toy_data/toy_dataset.hdf5',
+                          selected_idx=list(selected_idx), seed=5, batch_size=64, norm=True, cuda=True)
     dataset_hash = make_hash(dataset_config)
-    dataset_entry = dict(dataset_loader="nnsetup.datamaker.create_dataloaders_al", dataset_config=dataset_config,
-                     dataset_architect="Matthias Depoortere", dataset_comment=" Actively grown dataset")
+    dataset_entry = dict(dataset_fn="nnsetup.datamaker.create_dataloaders_synth", dataset_config=dataset_config,
+                         dataset_fabrikant="Matthias Depoortere", dataset_comment=" Actively grown dataset")
     Dataset().add_entry(**dataset_entry)
     for model_hash in model_hashes:
-        restriction = ('config_hash in ("{}")'.format(model_hash),
-                       'dataset_loader in ("{}")'.format("nnsetup.datamaker.create_dataloaders_al"),
-                       'dataset_config_hash in ("{}")'.format(dataset_hash))
+        restriction = ('model_hash in ("{}")'.format(model_hash),
+                       'dataset_fn in ("{}")'.format("nnsetup.datamaker.create_dataloaders_synth"),
+                       'dataset_hash in ("{}")'.format(dataset_hash))
         TrainedModel().populate(*restriction)
         model = load_latest_model(dataset_config, model_config, dataset_hash, model_hash)
 
