@@ -2,7 +2,7 @@ from mlutils.data.datasets import StaticImageSet
 from mlutils.data.transforms import Subsample, ToTensor
 from nnsetup.transforms import Normalized
 
-
+import torch
 import numpy as np
 
 from torch.utils.data import DataLoader, Subset
@@ -77,8 +77,8 @@ def create_dataloaders_al(file='', seed=0, selected_idx=set([]), batch_size=64, 
 
 def create_dataloaders_rand(file, seed, total_im, n_selected, batch_size, norm=True, cuda=True):
     dat = StaticImageSet(file, 'images', 'responses')
-    idx = (dat.neurons.area == 'V1') & (dat.neurons.layer == 'L2/3')
-    dat.transforms = [Subsample(np.where(idx)[0]), ToTensor(cuda=cuda)]
+    #idx = (dat.neurons.area == 'V1') & (dat.neurons.layer == 'L2/3')
+    dat.transforms = [ToTensor(cuda=cuda)]
     if norm:
         dat.transforms.append(Normalized(np.where(dat.tiers == 'train')[0], dat.responses, cuda=cuda))
     np.random.seed(seed)
@@ -89,7 +89,7 @@ def create_dataloaders_rand(file, seed, total_im, n_selected, batch_size, norm=T
 
     train_loader.img_shape = dat.img_shape
     train_loader.n_neurons = dat.n_neurons
-    _, train_loader.transformed_mean = dat.transformed_mean()
+    train_loader.transformed_mean = torch.tensor(dat[()].responses.mean(axis=0)).cuda() #dat.transformed_mean()
 
     val_loader = DataLoader(dat,
                             sampler=SubsetRandomSampler(np.where(dat.tiers == 'validation')[0]),
@@ -109,20 +109,21 @@ def create_dataloaders_rand(file, seed, total_im, n_selected, batch_size, norm=T
     return loaders
 
 
-def create_dataloaders_synth(file, seed, n_selected, batch_size, norm=True, cuda=True):
+def create_dataloaders_synth(file, seed, selected_idx, batch_size, norm=True, cuda=True):
     dat = StaticImageSet(file, 'images', 'responses')
     dat.transforms = [ToTensor(cuda=cuda)]
     if norm:
         dat.transforms.append(Normalized(np.where(dat.tiers == 'train')[0], dat.responses, cuda=cuda))
     np.random.seed(seed)
-    selected_indexes = np.random.choice(np.where(dat.tiers == 'train')[0], size=n_selected, replace=False)
-    selected_set = Subset(dat, selected_indexes)
+    selected_set = Subset(dat, selected_idx)
     train_loader = DataLoader(selected_set,
                               batch_size=batch_size)
+    train_loader.img_shape = dat.img_shape
+    train_loader.n_neurons = dat.n_neurons
 
     train_loader.img_shape = dat.img_shape
     train_loader.n_neurons = dat.n_neurons
-    _, train_loader.transformed_mean = dat.transformed_mean()
+    train_loader.transformed_mean = torch.as_tensor(dat[()].responses.mean(axis=0)).cuda()
 
     val_loader = DataLoader(dat,
                             sampler=SubsetRandomSampler(np.where(dat.tiers == 'validation')[0]),

@@ -61,8 +61,9 @@ class Ensemble(nn.Module):
         return torch.cat(preds, dim=0).std(dim=0).mean()
 
 
-def create_model(train_loader, seed=0, gpu_id=0, **config):
-    np.random.seed(config['random_seed'])
+def create_model(loaders, seed=0, gpu_id=0, **config):
+    np.random.seed(seed)
+    train_loader = loaders['train']
     in_shape = train_loader.img_shape
     n_neurons = train_loader.n_neurons
     transformed_mean = train_loader.transformed_mean

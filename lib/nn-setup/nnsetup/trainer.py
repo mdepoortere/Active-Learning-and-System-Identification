@@ -28,8 +28,8 @@ def run(model, criterion, optimizer, scheduler, stop_closure, train_loader,
     return model, epoch
 
 
-def train_model(model, seed, train, val, test, patience=4, lr=0.001, weight_decay=1e-6, max_iter=100, **config):
-
+def train_model(model, dataloaders,seed=5, uid=None, cb=None, patience=4, lr=0.001, weight_decay=1e-6, max_iter=100):
+    train, val, test = dataloaders['train'], dataloaders['val'], dataloaders['test']
     tracker = MultipleObjectiveTracker(
         poisson=partial(poisson_stop_mc, model, val),
         gamma=partial(gamma_stop_mc, model, val),
@@ -56,7 +56,7 @@ def train_model(model, seed, train, val, test, patience=4, lr=0.001, weight_deca
                        train_loader=train,
                        epoch=0,
                        interval=1,
-                       patience=10,
+                       patience=patience,
                        max_iter=max_iter,
                        maximize=True,
                        tolerance=1e-5,
